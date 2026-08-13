@@ -1,0 +1,23 @@
+# Данные (десятки ГБ, тянутся скриптами по манифесту)
+data/
+download.log
+logs/
+
+# Выгрузка Telegram-переписки — не публикуется, каждый выгружает сам (см. README)
+docs/telegram/
+
+# Секреты Telegram: ключи API и файл сессии = доступ к учётке
+scripts/.tg_env
+scripts/.tg_session*
+
+# Python-окружения
+.venv/
+__pycache__/
+
+# Производные артефакты детектора (регенерируются analysis/detect.py, video_scan.py)
+analysis/pilot/gt-results/crops/
+analysis/pilot/scan-*/
+
+*.log
+
+.DS_Store

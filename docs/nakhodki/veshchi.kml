@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2"><Document>
+<name>Находки вещей 13.08.2026 — Курумды</name>
+<Placemark><name>Синий рюкзак (опознан: Николая)</name><description>триангуляция дальномер+GPS, General #1641. Высота 4663 м.</description><Point><altitudeMode>absolute</altitudeMode><coordinates>73.586792,39.482656,4663</coordinates></Point></Placemark>
+<Placemark><name>Палка Komperdell №1</name><description>триангуляция, General #1641. Высота 4529 м.</description><Point><altitudeMode>absolute</altitudeMode><coordinates>73.585463,39.483176,4529</coordinates></Point></Placemark>
+<Placemark><name>Бирюзовая крышка/миска</name><description>триангуляция, General #1641. Высота 4531 м.</description><Point><altitudeMode>absolute</altitudeMode><coordinates>73.585443,39.483144,4531</coordinates></Point></Placemark>
+<Placemark><name>Белый стакан, красная маркировка</name><description>GPS дрона у объекта, Вещи #1756; сверено с телеметрией. Высота 4552 м.</description><Point><altitudeMode>absolute</altitudeMode><coordinates>73.585137,39.483403,4552</coordinates></Point></Placemark>
+<Placemark><name>Конец расчётной линии падения</name><description>расчёт C C, General #1659. Высота 4233 м.</description><Point><altitudeMode>absolute</altitudeMode><coordinates>73.5932,39.4965,4233</coordinates></Point></Placemark>
+<Placemark><name>Линия падения (расчёт)</name><LineString><altitudeMode>absolute</altitudeMode><coordinates>73.586792,39.482656,4663 73.585463,39.483176,4529 73.5932,39.4965,4233</coordinates></LineString></Placemark>
+</Document></kml>
