@@ -198,6 +198,16 @@ def cast(dem: Dem, lat, lon, alt, direction):
     return None
 
 
+class _ShiftDem:
+    """DEM со сдвигом высоты — для вилки чувствительности cast к ошибке DEM."""
+
+    def __init__(self, base, dz):
+        self.base, self.dz = base, dz
+
+    def elev(self, lat, lon):
+        return self.base.elev(lat, lon) + self.dz
+
+
 def cmd_cast(args):
     dem = Dem()
     video = Path(args.video)
@@ -210,13 +220,33 @@ def cmd_cast(args):
     h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)) or 1080
     cap.release()
     print(f"дрон: {lat:.6f}, {lon:.6f}, {alt:.0f} м; подвес yaw {yaw:.1f} pitch {pitch:.1f}")
-    hit = cast(dem, lat, lon, alt, ray_dir(yaw, pitch, args.px, args.py, w, h, args.f))
+    direction = ray_dir(yaw, pitch, args.px, args.py, w, h, args.f)
+    hit = cast(dem, lat, lon, alt, direction)
     if hit is None:
         print("луч не пересёк рельеф (смотрит выше горизонта или вне тайла)")
         return
     la, lo, ground, dist = hit
     print(f"точка: {la:.6f}, {lo:.6f}, рельеф {ground:.0f} м, дистанция {dist:.0f} м")
     print(f"GSD: {dist / args.f * 100:.1f} см/пикс (объект 30 пикс ≈ {dist / args.f * 30:.2f} м)")
+    # Обязательная вилка: ошибка высоты DEM на этой стене достигает 58 м
+    # (docs/nezavisimyy-analiz/06-…), у пологих к склону лучей она уводит точку
+    # на десятки-сотни метров (analysis/review/geoprojection.md, корректировка 14.08).
+    drift_max = 0.0
+    for dz in (+30, -30):
+        h2 = cast(_ShiftDem(dem, dz), lat, lon, alt, direction)
+        if h2 is None:
+            print(f"вилка DEM{dz:+d} м: нет пересечения")
+            drift_max = float("inf")
+            continue
+        la2, lo2, _, dist2 = h2
+        drift = math.hypot((la2 - la) * 111132.0,
+                           (lo2 - lo) * 111320.0 * math.cos(math.radians(la)))
+        drift_max = max(drift_max, drift)
+        print(f"вилка DEM{dz:+d} м: точка {la2:.6f}, {lo2:.6f}, дистанция {dist2:.0f} м, "
+              f"увод {drift:.0f} м")
+    if drift_max > 30:
+        print("ВНИМАНИЕ: координата ненадёжна (луч идёт полого к склону) — "
+              "подтвердить параллаксом/подлётом или дальномером")
 
 
 def cmd_focal(args):

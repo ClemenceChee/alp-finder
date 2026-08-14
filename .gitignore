@@ -28,6 +28,11 @@ analysis/fullframe/
 # Прогоны стенда врезок (регенерируются analysis/inject_probe.py; цифры - в docs/video-analysis.md)
 analysis/floor-*/
 
+# Сборка публичного просмотрщика (регенерируется analysis/viewer/build_dist.py)
+analysis/viewer/dist/
+# Кэш wrangler (деплой Cloudflare Pages)
+.wrangler/
+
 *.log
 
 # Рабочий мусор сессий и разовые передачи

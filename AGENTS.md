@@ -34,14 +34,28 @@ docs/                   — вся накопленная информация; 
                           куда просить съёмку (ICEYE/Capella/Planet/Maxar) и что важнее спутников
   video-analysis.md     — конвейер анализа видео и статус пилота
   colour-signatures.md  — измеренные цвета найденных вещей и ловушек, колонки к выдаче детектора, пределы метода
-  coverage-gsd.md       — реальное покрытие роликов 11–12.08 против порога 8 px: какие считать неосмотренными
+  coverage-gsd.md       — реальное покрытие роликов 11–12.08 против порога 8 px: какие считать неосмотренными;
+                          + слепое пятно склона между зоной интереса и вещами (полигон, analysis/coverage_polygon.py)
   marshrut/             — плановый маршрут группы с карты штаба (GPX, лагеря) и сверка: зона интереса — на маршруте под Camp2
   focal-length-calibration.md — методика фокусного самокалибровкой (внешний PR #4)
 analysis/               — код и артефакты анализа видео (venv, детектор, кропы); план — docs/video-analysis.md
   review/               — отчёты ручного отсмотра монтажных листов (по дням + вертолёт + углублённые)
-  viewer/               — генератор статического HTML-просмотрщика кандидатов (build_viewer.py)
+  viewer/               — статический HTML-просмотрщик: build_viewer.py (карточки кандидатов, монтажи),
+                          build_map.py (интерактивная карта: кандидаты с чекбоксами, маршрут, коридор,
+                          линии спуска по DEM, изолинии; расстояния до траектории падения в попапах).
+                          Локальный запуск и развёртывание с нуля (venv, DEM) — README «Развёртывание».
+                          Публичная копия: https://alp-finder.pages.dev (карта — /map); зеркало для
+                          РФ/РБ, где *.pages.dev заблокирован провайдерами:
+                          https://darazumovskiy.github.io/alp-finder/ (GitHub Pages, ветка gh-pages).
+                          Обновление после перегенерации страниц: python analysis/viewer/build_dist.py
+                          (собирает dist/ со всеми картинками, пути в страницах делает относительными),
+                          затем оба деплоя:
+                          npx wrangler pages deploy analysis/viewer/dist --project-name alp-finder
+                          (Cloudflare Pages, логин через npx wrangler login)
+                          и bash scripts/deploy_mirror.sh (зеркало)
 data/drive/             — локальное зеркало Drive: <дата>/<слаг-папки>/<файл>
 data/telegram/          — медиа из TG-группы: <слаг-темы>/<msg_id>_<файл>
+data/dem/N39E073.tif    — тайл Copernicus GLO-30 для geoproject/coverage/карты; скачивание — README «Развёртывание»
 logs/                   — tg-updates.log (что и когда докачано из TG), tg-watch.log (служебный)
 scripts/
   manifest.tsv          — манифест скачивания: локальный путь, drive file id, размер
@@ -49,6 +63,7 @@ scripts/
   drive_cron.sh         — ежечасный повтор докачки Drive (квоты Google); стоит в crontab
   tg_export.py          — выгрузка TG-группы (Telethon; сессия .tg_session — секрет, не публиковать)
   tg_cron.sh            — итерация докачки TG; стоит в crontab раз в минуту
+  deploy_mirror.sh      — публикация dist/ просмотрщика в ветку gh-pages (зеркало для РФ/РБ)
 ```
 
 ## Данные

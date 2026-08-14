@@ -1,0 +1,6 @@
+# Окружение анализа: python3 -m venv analysis/.venv && analysis/.venv/bin/pip install -r analysis/requirements.txt
+opencv-python-headless>=4.10
+tifffile>=2024.8
+imagecodecs>=2024.6
+matplotlib>=3.9
+pytest>=8

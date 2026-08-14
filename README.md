@@ -14,12 +14,22 @@
 ## Что лежит в репозитории, а что нет
 
 В репо: документация, скрипты, реестр находок с кадрами и картой.
-НЕ в репо (создаётся локально скриптами):
+НЕ в репо (создаётся локально скриптами, см. «Развёртывание»):
 
 - `data/drive/` — зеркало видео с Google Drive штаба (~40 ГБ);
 - `data/telegram/` и `docs/telegram/` — выгрузка волонтёрской Telegram-группы
   (переписку не публикуем из уважения к участникам — выгружается самостоятельно);
+- `data/dem/N39E073.tif` — тайл модели рельефа Copernicus GLO-30 (38 МБ);
+- производные артефакты детектора (`analysis/scans/*/crops`, монтажи,
+  `analysis/fullframe/`) — регенерируются скриптами из видео;
 - секреты `scripts/.tg_env`, `scripts/.tg_session*`.
+
+Готовая публичная копия просмотрщика (без развёртывания чего-либо):
+**https://alp-finder.pages.dev** — кандидаты, монтажные листы, интерактивная
+карта (`/map`). Из России и Беларуси `*.pages.dev` заблокирован провайдерами —
+там открывайте зеркало: **https://darazumovskiy.github.io/alp-finder/**
+(карта — `/alp-finder/map`). Локальное развёртывание нужно только для работы
+с исходными видео и перегенерации анализа.
 
 ## Развёртывание
 
@@ -50,7 +60,32 @@ python3 scripts/tg_export.py           # полная выгрузка: docs/tel
 для докачки раз в минуту — `scripts/tg_cron.sh` в crontab. Файл сессии
 `scripts/.tg_session` — это вход в вашу учётку Telegram, не публикуйте его.
 
-### 3. Геопривязка видео без SRT
+### 3. Окружение анализа и модель рельефа (DEM)
+
+```bash
+python3 -m venv analysis/.venv
+analysis/.venv/bin/pip install -r analysis/requirements.txt
+
+# тайл рельефа Copernicus GLO-30 (нужен geoproject.py, coverage_gsd.py, карте):
+mkdir -p data/dem
+curl -o data/dem/N39E073.tif \
+  https://copernicus-dem-30m.s3.amazonaws.com/Copernicus_DSM_COG_10_N39_00_E073_00_DEM/Copernicus_DSM_COG_10_N39_00_E073_00_DEM.tif
+```
+
+### 4. Просмотрщик (кандидаты, монтажи, карта)
+
+```bash
+analysis/.venv/bin/python analysis/viewer/build_viewer.py   # index.html, montages.html
+analysis/.venv/bin/python analysis/viewer/build_map.py      # map.html (нужен DEM)
+python3 -m http.server 8077 -d .    # из корня репозитория
+# открыть http://localhost:8077/analysis/viewer/index.html
+```
+
+Превью в карточках ссылаются на кадры в репозитории и на `data/drive/` —
+последние появятся после шага 1. Деплой публичной копии — `AGENTS.md`
+(раздел «Структура проекта», `analysis/viewer/`).
+
+### 5. Геопривязка видео без SRT
 
 У части DJI-видео нет сайдкар-SRT с телеметрией. Извлечение GPS-трека из
 встроенного потока (DJI M30T, protobuf):
