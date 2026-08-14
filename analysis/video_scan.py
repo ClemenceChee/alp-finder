@@ -14,6 +14,7 @@ lat/lon из сайдкара <видео>.gps.tsv, если он есть), mon
 """
 
 import argparse
+import csv
 import math
 from pathlib import Path
 
@@ -36,15 +37,17 @@ def frame_shift(prev_small, cur_small, scale):
 
 
 def load_gps(video: Path):
-    """[(t, lat, lon, alt)] из сайдкара .gps.tsv, если есть."""
+    """[(t, lat, lon, alt)] из сайдкара .gps.tsv, если есть.
+
+    Читаем по заголовку, а не по позиции: dji_meta_gps.py пишет ещё и углы борта
+    и подвеса, и число столбцов будет расти.
+    """
     side = video.with_suffix(video.suffix + ".gps.tsv")
     if not side.exists():
         return []
-    rows = []
-    for line in side.read_text().splitlines()[1:]:
-        t, lat, lon, alt = line.split("\t")
-        rows.append((float(t), lat, lon, alt))
-    return rows
+    with side.open(encoding="utf-8") as f:
+        return [(float(r["time_s"]), r["lat"], r["lon"], r["alt_m"])
+                for r in csv.DictReader(f, delimiter="\t")]
 
 
 def gps_at(rows, t):
