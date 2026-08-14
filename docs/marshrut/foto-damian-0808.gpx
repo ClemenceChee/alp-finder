@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<gpx xmlns="http://www.topografix.com/GPX/1/1" creator="http://nakarte.me" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd" version="1.1">
+	<metadata>
+		<time>2026-08-14T01:04:01.066Z</time>
+	</metadata>
+	<wpt lat="39.490123" lon="73.612351">
+		<name>ледник с извивом</name>
+	</wpt>
+	<wpt lat="39.524970" lon="73.643422">
+		<name>ручеек под черным чклоном</name>
+	</wpt>
+	<trk>
+		<name>Фото Дамиан 08.08 11:13</name>
+		<trkseg>
+			<trkpt lat="39.492912" lon="73.599991"><time>1970-01-01T00:00:01.000Z</time></trkpt>
+			<trkpt lat="39.551899" lon="73.613209"><time>1970-01-01T00:00:01.000Z</time></trkpt>
+			<trkpt lat="39.525099" lon="73.649430"><time>1970-01-01T00:00:01.000Z</time></trkpt>
+		</trkseg>
+	</trk>
+</gpx>

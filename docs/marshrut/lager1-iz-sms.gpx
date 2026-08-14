@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<gpx xmlns="http://www.topografix.com/GPX/1/1" creator="http://nakarte.me" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd" version="1.1">
+	<metadata>
+		<time>2026-08-14T01:04:01.067Z</time>
+	</metadata>
+	<wpt lat="39.483535" lon="73.593962">
+		<name>Real C1</name>
+	</wpt>
+	<wpt lat="39.480960" lon="73.592631">
+		<name>39.48096587° 73.592623517° веревки </name>
+	</wpt>
+</gpx>

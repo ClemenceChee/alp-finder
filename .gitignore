@@ -17,10 +17,21 @@ __pycache__/
 # Производные артефакты детектора (регенерируются analysis/detect.py, video_scan.py)
 analysis/pilot/gt-results/crops/
 analysis/pilot/scan-*/
+# Сканы всего архива: кропы и монтажи — десятки тысяч jpg; tracks.tsv оставляем в git
+analysis/scans/*/crops/
+analysis/scans/*/montage_*.jpg
+analysis/scans-low/*/crops/
+analysis/scans-low/*/montage_*.jpg
+# Полнокадровые выгрузки (регенерируются из data/drive)
+analysis/fullframe/
 
 # Прогоны стенда врезок (регенерируются analysis/inject_probe.py; цифры - в docs/video-analysis.md)
 analysis/floor-*/
 
 *.log
+
+# Рабочий мусор сессий и разовые передачи
+tmp/
+srt-drone-part3.zip
 
 .DS_Store

@@ -1,8 +1,9 @@
 # Фокусное расстояние: самокалибровка по видео
 
-Обновлено: 2026-08-14. Код: `image_lab.kurumdy.selfcal` (`estimate_focal`,
-`FocalSeries`), вход - `image_lab.kurumdy.telemetry`, потребитель -
-`image_lab.kurumdy.georef.locate` (слой 1 конвейера, `docs/video-analysis.md`).
+Обновлено: 2026-08-14. Методика — из внешнего PR #4 (волонтёр C C); упоминаемый
+там код `image_lab.kurumdy.*` живёт в его конвейере и в этом репозитории
+отсутствует. Наша реализация той же методики — `analysis/geoproject.py`
+(команда `focal`; потребитель — `cast`, слой 1 конвейера `docs/video-analysis.md`).
 
 ## Проблема
 
