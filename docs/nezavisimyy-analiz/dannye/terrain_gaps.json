@@ -1,0 +1,380 @@
+{
+ "method": "Deposition model over the DEM window spanned by all nine camera tracks. Plausible resting places are the cells with the highest heavy-object deposition score inside the measured elevation band 4338-5749 m, taken until they amount to 0.19% of the window; both the band and the fraction come from the measured terrain analysis and are used as constraints rather than rederived. A cell counts as imaged only if a ray from a sampled frame landed in it at a ground sample of 0.30 m/px or finer, because coarser ground was overflown, not searched, and because a ray that stops on a ridge cannot claim the gully behind it.",
+ "plausible_cells": 77,
+ "unimaged_cells": 70,
+ "unimaged_fraction": 0.9091,
+ "window_cells": 40304,
+ "imaged_cells": 2212,
+ "rays_cast": 49694,
+ "window_km2": 38.45,
+ "imaged_km2": 2.11,
+ "plausible_km2": 0.073,
+ "unimaged_km2": 0.067,
+ "cell_m": 30.9,
+ "elevation_range_m": [
+  4361,
+  5129
+ ],
+ "flights_used": [
+  "DJI_20260811153236_0001_Z",
+  "DJI_20260811154053_0003_Z",
+  "DJI_20260811160637_0001_Z",
+  "DJI_20260811161324_0003_Z",
+  "DJI_20260811204542_0001_Z",
+  "DJI_20260812133415_0006_Z",
+  "DJI_20260812133836_0008_Z",
+  "DJI_20260812143557_0001_Z"
+ ],
+ "flights_without_focal": [
+  "DJI_20260812141803_0001_Z"
+ ],
+ "bounds": [
+  39.457083,
+  73.574028,
+  39.520417,
+  73.622639
+ ],
+ "zones": [
+  {
+   "lat": 39.483333,
+   "lon": 73.582639,
+   "elev_min_m": 4508.0,
+   "elev_max_m": 4608.0,
+   "cells": 8,
+   "area_m2": 7632.0,
+   "heavy": 0.688,
+   "nearest_camera_m": 890.0,
+   "nearest_flight": "DJI_20260811204542_0001_Z"
+  },
+  {
+   "lat": 39.482361,
+   "lon": 73.615694,
+   "elev_min_m": 4579.0,
+   "elev_max_m": 4658.0,
+   "cells": 7,
+   "area_m2": 6678.0,
+   "heavy": 0.685,
+   "nearest_camera_m": 1793.0,
+   "nearest_flight": "DJI_20260812133415_0006_Z"
+  },
+  {
+   "lat": 39.484722,
+   "lon": 73.584583,
+   "elev_min_m": 4456.0,
+   "elev_max_m": 4505.0,
+   "cells": 6,
+   "area_m2": 5724.0,
+   "heavy": 0.765,
+   "nearest_camera_m": 764.0,
+   "nearest_flight": "DJI_20260811204542_0001_Z"
+  },
+  {
+   "lat": 39.484083,
+   "lon": 73.603972,
+   "elev_min_m": 4539.0,
+   "elev_max_m": 4576.0,
+   "cells": 5,
+   "area_m2": 4770.0,
+   "heavy": 0.863,
+   "nearest_camera_m": 769.0,
+   "nearest_flight": "DJI_20260812133415_0006_Z"
+  },
+  {
+   "lat": 39.475278,
+   "lon": 73.599028,
+   "elev_min_m": 5090.0,
+   "elev_max_m": 5129.0,
+   "cells": 4,
+   "area_m2": 3816.0,
+   "heavy": 0.819,
+   "nearest_camera_m": 581.0,
+   "nearest_flight": "DJI_20260812141803_0001_Z"
+  },
+  {
+   "lat": 39.480694,
+   "lon": 73.580556,
+   "elev_min_m": 4710.0,
+   "elev_max_m": 4734.0,
+   "cells": 4,
+   "area_m2": 3816.0,
+   "heavy": 0.759,
+   "nearest_camera_m": 982.0,
+   "nearest_flight": "DJI_20260812143557_0001_Z"
+  },
+  {
+   "lat": 39.4825,
+   "lon": 73.584583,
+   "elev_min_m": 4574.0,
+   "elev_max_m": 4605.0,
+   "cells": 4,
+   "area_m2": 3816.0,
+   "heavy": 0.809,
+   "nearest_camera_m": 707.0,
+   "nearest_flight": "DJI_20260811204542_0001_Z"
+  },
+  {
+   "lat": 39.488056,
+   "lon": 73.584583,
+   "elev_min_m": 4385.0,
+   "elev_max_m": 4413.0,
+   "cells": 4,
+   "area_m2": 3816.0,
+   "heavy": 0.668,
+   "nearest_camera_m": 867.0,
+   "nearest_flight": "DJI_20260811161324_0003_Z"
+  },
+  {
+   "lat": 39.482917,
+   "lon": 73.600694,
+   "elev_min_m": 4684.0,
+   "elev_max_m": 4697.0,
+   "cells": 3,
+   "area_m2": 2862.0,
+   "heavy": 0.757,
+   "nearest_camera_m": 563.0,
+   "nearest_flight": "DJI_20260812133415_0006_Z"
+  },
+  {
+   "lat": 39.482361,
+   "lon": 73.598333,
+   "elev_min_m": 4730.0,
+   "elev_max_m": 4734.0,
+   "cells": 2,
+   "area_m2": 1908.0,
+   "heavy": 0.65,
+   "nearest_camera_m": 446.0,
+   "nearest_flight": "DJI_20260812133836_0008_Z"
+  },
+  {
+   "lat": 39.482639,
+   "lon": 73.598889,
+   "elev_min_m": 4717.0,
+   "elev_max_m": 4723.0,
+   "cells": 2,
+   "area_m2": 1908.0,
+   "heavy": 0.746,
+   "nearest_camera_m": 461.0,
+   "nearest_flight": "DJI_20260812133415_0006_Z"
+  },
+  {
+   "lat": 39.485,
+   "lon": 73.60375,
+   "elev_min_m": 4515.0,
+   "elev_max_m": 4523.0,
+   "cells": 2,
+   "area_m2": 1908.0,
+   "heavy": 0.852,
+   "nearest_camera_m": 731.0,
+   "nearest_flight": "DJI_20260812133415_0006_Z"
+  },
+  {
+   "lat": 39.475972,
+   "lon": 73.599306,
+   "elev_min_m": 5072.0,
+   "elev_max_m": 5072.0,
+   "cells": 1,
+   "area_m2": 954.0,
+   "heavy": 0.778,
+   "nearest_camera_m": 600.0,
+   "nearest_flight": "DJI_20260812141803_0001_Z"
+  },
+  {
+   "lat": 39.47625,
+   "lon": 73.599583,
+   "elev_min_m": 5057.0,
+   "elev_max_m": 5057.0,
+   "cells": 1,
+   "area_m2": 954.0,
+   "heavy": 0.792,
+   "nearest_camera_m": 625.0,
+   "nearest_flight": "DJI_20260812141803_0001_Z"
+  },
+  {
+   "lat": 39.476528,
+   "lon": 73.599861,
+   "elev_min_m": 5043.0,
+   "elev_max_m": 5043.0,
+   "cells": 1,
+   "area_m2": 954.0,
+   "heavy": 0.75,
+   "nearest_camera_m": 651.0,
+   "nearest_flight": "DJI_20260812141803_0001_Z"
+  },
+  {
+   "lat": 39.476806,
+   "lon": 73.600139,
+   "elev_min_m": 5031.0,
+   "elev_max_m": 5031.0,
+   "cells": 1,
+   "area_m2": 954.0,
+   "heavy": 0.696,
+   "nearest_camera_m": 679.0,
+   "nearest_flight": "DJI_20260811204542_0001_Z"
+  },
+  {
+   "lat": 39.477083,
+   "lon": 73.600417,
+   "elev_min_m": 5022.0,
+   "elev_max_m": 5022.0,
+   "cells": 1,
+   "area_m2": 954.0,
+   "heavy": 0.648,
+   "nearest_camera_m": 701.0,
+   "nearest_flight": "DJI_20260812143557_0001_Z"
+  },
+  {
+   "lat": 39.477639,
+   "lon": 73.600972,
+   "elev_min_m": 5003.0,
+   "elev_max_m": 5003.0,
+   "cells": 1,
+   "area_m2": 954.0,
+   "heavy": 0.627,
+   "nearest_camera_m": 747.0,
+   "nearest_flight": "DJI_20260812143557_0001_Z"
+  },
+  {
+   "lat": 39.480972,
+   "lon": 73.58125,
+   "elev_min_m": 4699.0,
+   "elev_max_m": 4699.0,
+   "cells": 1,
+   "area_m2": 954.0,
+   "heavy": 0.867,
+   "nearest_camera_m": 930.0,
+   "nearest_flight": "DJI_20260812143557_0001_Z"
+  },
+  {
+   "lat": 39.48125,
+   "lon": 73.581528,
+   "elev_min_m": 4686.0,
+   "elev_max_m": 4686.0,
+   "cells": 1,
+   "area_m2": 954.0,
+   "heavy": 0.845,
+   "nearest_camera_m": 915.0,
+   "nearest_flight": "DJI_20260812143557_0001_Z"
+  },
+  {
+   "lat": 39.48125,
+   "lon": 73.615972,
+   "elev_min_m": 4677.0,
+   "elev_max_m": 4677.0,
+   "cells": 1,
+   "area_m2": 954.0,
+   "heavy": 0.65,
+   "nearest_camera_m": 1847.0,
+   "nearest_flight": "DJI_20260812133415_0006_Z"
+  },
+  {
+   "lat": 39.481528,
+   "lon": 73.581806,
+   "elev_min_m": 4671.0,
+   "elev_max_m": 4671.0,
+   "cells": 1,
+   "area_m2": 954.0,
+   "heavy": 0.818,
+   "nearest_camera_m": 902.0,
+   "nearest_flight": "DJI_20260812143557_0001_Z"
+  },
+  {
+   "lat": 39.481806,
+   "lon": 73.582083,
+   "elev_min_m": 4655.0,
+   "elev_max_m": 4655.0,
+   "cells": 1,
+   "area_m2": 954.0,
+   "heavy": 0.723,
+   "nearest_camera_m": 889.0,
+   "nearest_flight": "DJI_20260812143557_0001_Z"
+  },
+  {
+   "lat": 39.482083,
+   "lon": 73.597917,
+   "elev_min_m": 4744.0,
+   "elev_max_m": 4744.0,
+   "cells": 1,
+   "area_m2": 954.0,
+   "heavy": 0.649,
+   "nearest_camera_m": 416.0,
+   "nearest_flight": "DJI_20260812133836_0008_Z"
+  },
+  {
+   "lat": 39.483194,
+   "lon": 73.60125,
+   "elev_min_m": 4672.0,
+   "elev_max_m": 4672.0,
+   "cells": 1,
+   "area_m2": 954.0,
+   "heavy": 0.678,
+   "nearest_camera_m": 587.0,
+   "nearest_flight": "DJI_20260812133415_0006_Z"
+  },
+  {
+   "lat": 39.483194,
+   "lon": 73.602361,
+   "elev_min_m": 4614.0,
+   "elev_max_m": 4614.0,
+   "cells": 1,
+   "area_m2": 954.0,
+   "heavy": 0.668,
+   "nearest_camera_m": 672.0,
+   "nearest_flight": "DJI_20260812133415_0006_Z"
+  },
+  {
+   "lat": 39.485417,
+   "lon": 73.610972,
+   "elev_min_m": 4517.0,
+   "elev_max_m": 4517.0,
+   "cells": 1,
+   "area_m2": 954.0,
+   "heavy": 0.683,
+   "nearest_camera_m": 1283.0,
+   "nearest_flight": "DJI_20260811160637_0001_Z"
+  },
+  {
+   "lat": 39.485972,
+   "lon": 73.584583,
+   "elev_min_m": 4442.0,
+   "elev_max_m": 4442.0,
+   "cells": 1,
+   "area_m2": 954.0,
+   "heavy": 0.684,
+   "nearest_camera_m": 816.0,
+   "nearest_flight": "DJI_20260812133836_0008_Z"
+  },
+  {
+   "lat": 39.485972,
+   "lon": 73.610417,
+   "elev_min_m": 4480.0,
+   "elev_max_m": 4480.0,
+   "cells": 1,
+   "area_m2": 954.0,
+   "heavy": 0.64,
+   "nearest_camera_m": 1211.0,
+   "nearest_flight": "DJI_20260811160637_0001_Z"
+  },
+  {
+   "lat": 39.48625,
+   "lon": 73.610139,
+   "elev_min_m": 4466.0,
+   "elev_max_m": 4466.0,
+   "cells": 1,
+   "area_m2": 954.0,
+   "heavy": 0.634,
+   "nearest_camera_m": 1175.0,
+   "nearest_flight": "DJI_20260811160637_0001_Z"
+  },
+  {
+   "lat": 39.492361,
+   "lon": 73.577917,
+   "elev_min_m": 4361.0,
+   "elev_max_m": 4361.0,
+   "cells": 1,
+   "area_m2": 954.0,
+   "heavy": 0.645,
+   "nearest_camera_m": 1546.0,
+   "nearest_flight": "DJI_20260811161324_0003_Z"
+  }
+ ]
+}

@@ -1,0 +1,18 @@
+{
+ "pinned-DJI_20260811204542_0001_Z-6135": {
+  "lat": 39.48045896296963,
+  "lon": 73.5924844828181,
+  "alt_msl": 5211.328,
+  "gimbal_yaw": 9.6,
+  "gimbal_pitch": -51.9,
+  "note": "THIS IS THE CAMERA, NOT THE OBJECT"
+ },
+ "358b3cb4ae": {
+  "lat": 39.475264296730934,
+  "lon": 73.59175270852873,
+  "alt_msl": 5590.078,
+  "gimbal_yaw": 178.5,
+  "gimbal_pitch": 10.3,
+  "note": "THIS IS THE CAMERA, NOT THE OBJECT"
+ }
+}
