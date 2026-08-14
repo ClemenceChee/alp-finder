@@ -1,0 +1,674 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kurumdy: the object site in three dimensions</title>
+<style>
+:root{
+  --paper:#f7f5f2; --ink:#16130f; --muted:#6a6259; --rule:#d9d3c9;
+  --signal:#c2410c; --glacier:#0e7490; --warn:#a16207; --panel:#ffffffcc;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#14120f; --ink:#ece7e0; --muted:#9b9288; --rule:#332e28;
+    --signal:#fb923c; --glacier:#22d3ee; --warn:#fbbf24; --panel:#1c1916d9;
+  }
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--paper);color:var(--ink);
+  font:14px/1.5 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;overflow:hidden}
+#stage{position:fixed;inset:0;overflow:hidden;background:var(--paper)}
+#viewport{position:absolute;transform-origin:0 0}
+#viewport canvas{display:block}
+#photo{position:absolute;left:0;top:0;pointer-events:none;image-rendering:auto}
+.panel{position:fixed;background:var(--panel);border:1px solid var(--rule);
+  border-radius:8px;padding:12px 14px;backdrop-filter:blur(8px);max-width:340px}
+#hud{top:12px;left:12px}
+#hud h1{margin:0 0 4px;font-size:15px;letter-spacing:-.01em}
+#hud p{margin:0 0 8px;color:var(--muted);font-size:12px}
+#legend{bottom:12px;left:12px;font-size:12px}
+#legend div{display:flex;align-items:center;gap:8px;margin:3px 0}
+.sw{width:11px;height:11px;border-radius:2px;flex:none}
+#list{top:12px;right:12px;max-height:calc(100vh - 24px);overflow:auto;width:290px}
+#list h2{margin:0 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:.08em;
+  color:var(--muted);font-weight:600}
+.cam{display:block;width:100%;text-align:left;border:1px solid transparent;background:none;
+  color:inherit;font:inherit;padding:5px 7px;border-radius:5px;cursor:pointer}
+.cam:hover{background:#8884}
+.cam.on{border-color:var(--signal);background:#8882}
+.cam small{color:var(--muted)}
+.tag{font-size:10px;padding:1px 5px;border-radius:99px;border:1px solid var(--rule);
+  color:var(--muted);margin-left:4px}
+#ctl{bottom:12px;left:50%;transform:translateX(-50%);display:flex;gap:14px;align-items:center;
+  white-space:nowrap}
+#ctl label{font-size:12px;color:var(--muted)}
+input[type=range]{width:120px;vertical-align:middle}
+button.act{border:1px solid var(--rule);background:none;color:inherit;font:inherit;
+  padding:4px 10px;border-radius:5px;cursor:pointer}
+button.act:hover{background:#8883}
+#read{position:fixed;bottom:12px;right:12px;font-size:11px;color:var(--muted);
+  text-align:right;font-variant-numeric:tabular-nums}
+table{border-collapse:collapse;font-size:11px;font-variant-numeric:tabular-nums}
+td{padding:1px 6px 1px 0}
+td.n{text-align:right}
+.warnrow{color:var(--warn)}
+#nowebgl{display:none;position:fixed;inset:0;padding:40px;overflow:auto}
+#nowebgl.on{display:block}
+kbd{border:1px solid var(--rule);border-radius:3px;padding:0 4px;font-size:11px}
+</style>
+</head>
+<body>
+<div id="stage"><div id="viewport"><img id="photo" alt=""></div></div>
+
+<div class="panel" id="hud">
+  <h1>Kurumdy: the object site</h1>
+  <p id="sub">Drag to orbit, scroll to zoom. Pick a camera to see what it saw.</p>
+  <table id="stats"></table>
+</div>
+
+<div class="panel" id="list">
+  <h2>Objects</h2>
+  <div id="objs"></div>
+  <h2 style="margin-top:12px">Cameras with photographs</h2>
+  <div id="cams"></div>
+  <h2 style="margin-top:12px">All reconstructed cameras</h2>
+  <div id="cams2"></div>
+</div>
+
+<div class="panel" id="legend"></div>
+
+<div class="panel" id="ctl">
+  <button class="act viewbtn" data-view="site">Site</button>
+  <button class="act viewbtn" data-view="rucksack">Rucksack</button>
+  <button class="act viewbtn" data-view="fall">Fall line</button>
+  <button class="act viewbtn" data-view="wide">Wide</button>
+  <label>photo <input type="range" id="fade" min="0" max="100" value="100"></label>
+  <label><input type="checkbox" id="showsurf" checked> photo surface</label>
+  <label><input type="checkbox" id="showdem" checked> DEM</label>
+  <label><input type="checkbox" id="showcloud"> points</label>
+  <label><input type="checkbox" id="showfr"> cameras</label>
+</div>
+
+<div id="read"></div>
+
+<div id="nowebgl">
+  <h1>This page needs WebGL</h1>
+  <p>The 3D model could not start because this browser has no working WebGL context.
+  The measurements it is built from are in <code>out/finds/OBJECT_COORDINATES.md</code>
+  and the flat report <code>out/finds/kurumdy-objects.html</code>.</p>
+  <div id="fallback"></div>
+</div>
+
+<script type="application/json" id="scene">%%SCENE%%</script>
+<script>%%THREE%%</script>
+<script>%%ORBIT%%</script>
+<script>
+"use strict";
+(function(){
+const SCENE = JSON.parse(document.getElementById('scene').textContent);
+const IMAGES = %%IMAGES%%;
+
+function decode(b64, Type){
+  const bin = atob(b64); const buf = new ArrayBuffer(bin.length);
+  const u8 = new Uint8Array(buf);
+  for(let i=0;i<bin.length;i++) u8[i]=bin.charCodeAt(i);
+  return new Type(buf);
+}
+function fmt(v,d){ return v===null||v===undefined?'--':Number(v).toFixed(d===undefined?1:d); }
+
+let renderer;
+try{
+  renderer = new THREE.WebGLRenderer({antialias:true, alpha:false});
+}catch(e){ document.getElementById('nowebgl').classList.add('on'); return; }
+if(!renderer || !renderer.getContext()){ document.getElementById('nowebgl').classList.add('on'); return; }
+
+const dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+const BG = dark ? 0x14120f : 0xf7f5f2;
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setClearColor(BG,1);
+// Without this the draped photograph renders darker and flatter than the same JPEG
+// shown in camera mode, and the two stop matching.
+renderer.outputEncoding = THREE.sRGBEncoding;
+const viewport = document.getElementById('viewport');
+viewport.insertBefore(renderer.domElement, viewport.firstChild);
+
+const scene = new THREE.Scene();
+// The scene is local East-North-Up in metres, so Z is up. three.js defaults to
+// Y up; telling the camera otherwise is cheaper and far less error-prone than
+// remapping every coordinate on the way in.
+const UP = new THREE.Vector3(0,0,1);
+const cam = new THREE.PerspectiveCamera(45, 1, 1, 40000);
+cam.up.copy(UP);
+const controls = new THREE.OrbitControls(cam, renderer.domElement);
+controls.enableDamping = true; controls.dampingFactor = 0.08;
+controls.screenSpacePanning = true;
+
+scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+scene.add(new THREE.HemisphereLight(0xdfe7f2, 0x3b342c, 0.55));
+const sun = new THREE.DirectionalLight(0xffffff, 0.95);
+sun.position.set(-0.45,-0.75,0.9).multiplyScalar(6000); scene.add(sun);
+
+/* ---------- terrain ---------- */
+const terrainGroup = new THREE.Group(); scene.add(terrainGroup);
+const demSurfaces = {};
+const siteLayer = SCENE.terrain.filter(function(l){return l.name==='site';})[0];
+const SITE_RECT = siteLayer ? {
+  e0: Math.min(siteLayer.east_m[0], siteLayer.east_m[1]),
+  e1: Math.max(siteLayer.east_m[0], siteLayer.east_m[1]),
+  n0: Math.min(siteLayer.north_m[0], siteLayer.north_m[1]),
+  n1: Math.max(siteLayer.north_m[0], siteLayer.north_m[1])
+} : null;
+// Draw the site first so its bounds are known when the context hole is cut.
+SCENE.terrain.slice().sort(function(a,b){
+  return (a.name==='site'?0:1)-(b.name==='site'?0:1);
+}).forEach(function(layer){
+  const z = decode(layer.z_int16_base64, Int16Array);
+  const rows = layer.rows, cols = layer.cols;
+  const e0 = layer.east_m[0], e1 = layer.east_m[1];
+  const n0 = layer.north_m[0], n1 = layer.north_m[1];
+  const zoff = layer.z_offset_m;
+  const geo = new THREE.BufferGeometry();
+  const pos = new Float32Array(rows*cols*3);
+  let lo=Infinity, hi=-Infinity;
+  for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){
+    const h = z[r*cols+c]-zoff; if(h<lo)lo=h; if(h>hi)hi=h;
+  }
+  for(let r=0;r<rows;r++){
+    // row 0 is the northern edge
+    const north = n1 + (n0-n1)*(r/(rows-1));
+    for(let c=0;c<cols;c++){
+      const east = e0 + (e1-e0)*(c/(cols-1));
+      const i=(r*cols+c)*3;
+      pos[i]=east; pos[i+1]=north; pos[i+2]=z[r*cols+c]-zoff;
+    }
+  }
+  // The site window lies inside the context window. Two coincident surfaces
+  // cannot both be drawn, and the context is the coarser of the two, so cut a
+  // hole in it and let the site mesh fill the gap.
+  const hole = (layer.name==='context' && SITE_RECT) ? SITE_RECT : null;
+  const idx=[];
+  for(let r=0;r<rows-1;r++) for(let c=0;c<cols-1;c++){
+    if(hole){
+      const east = e0 + (e1-e0)*((c+0.5)/(cols-1));
+      const north = n1 + (n0-n1)*((r+0.5)/(rows-1));
+      if(east>hole.e0 && east<hole.e1 && north>hole.n0 && north<hole.n1) continue;
+    }
+    const a=r*cols+c, b=a+1, d=a+cols, e=d+1;
+    idx.push(a,d,b, b,d,e);
+  }
+  geo.setAttribute('position', new THREE.BufferAttribute(pos,3));
+  geo.setIndex(idx);
+  geo.computeVertexNormals();
+  // Elevation ramp as vertex colour. Flat shading and native posting are kept
+  // on purpose: this surface is 24 to 41 m out against the laser points, and
+  // smoothing it would dress that up as detail.
+  // Hypsometric ramp anchored to a fixed elevation band rather than each
+  // window's own range: the context spans 2.6 km and the site barely 200 m, and
+  // per-window normalisation makes the same slope two different colours.
+  const BAND_LO = -400, BAND_HI = 1200;      // metres relative to the origin
+  const col = new Float32Array(rows*cols*3);
+  for(let i=0;i<rows*cols;i++){
+    let t = (pos[i*3+2]-BAND_LO)/(BAND_HI-BAND_LO);
+    t = Math.max(0, Math.min(1, t));
+    col[i*3]   = 0.22 + 0.70*t;              // scree brown to snow white
+    col[i*3+1] = 0.19 + 0.71*t;
+    col[i*3+2] = 0.17 + 0.72*t;
+  }
+  geo.setAttribute('color', new THREE.BufferAttribute(col,3));
+  // The site window sits inside the context window, so the two surfaces are
+  // coincident where they overlap. Without an offset they z-fight into noise.
+  const isSite = layer.name === 'site';
+  // The site DEM is 24 to 41 m out against the laser points and at the scatter
+  // it sits ABOVE the real ground, so an opaque mesh buries the reconstruction
+  // and every object underneath it. Drawing it as a translucent shell shows the
+  // reconstruction through it and makes the size of the error the visible thing.
+  const mat = new THREE.MeshLambertMaterial({vertexColors:true, flatShading:true,
+    side:THREE.DoubleSide,
+    transparent:isSite, opacity:isSite?0.34:1.0, depthWrite:!isSite,
+    polygonOffset:true, polygonOffsetFactor: isSite ? -2 : 0,
+    polygonOffsetUnits: isSite ? -4 : 0});
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.renderOrder = isSite ? 2 : 0;
+  mesh.userData.layer = layer.name;
+  terrainGroup.add(mesh);
+  demSurfaces[layer.name] = {z:z, rows:rows, cols:cols, e0:e0,e1:e1,n0:n0,n1:n1, zoff:zoff};
+});
+
+function demHeightAt(east, north){
+  // Prefer the site window where it covers the point, fall back to context.
+  const S = demSurfaces['site'];
+  const inSite = S && east>=Math.min(S.e0,S.e1) && east<=Math.max(S.e0,S.e1) &&
+                 north>=Math.min(S.n0,S.n1) && north<=Math.max(S.n0,S.n1);
+  const L = inSite ? S : (demSurfaces['context'] || S);
+  if(!L) return 0;
+  const c = (east-L.e0)/(L.e1-L.e0)*(L.cols-1);
+  const r = (L.n1-north)/(L.n1-L.n0)*(L.rows-1);
+  const ri = Math.max(0,Math.min(L.rows-1,Math.round(r)));
+  const ci = Math.max(0,Math.min(L.cols-1,Math.round(c)));
+  return L.z[ri*L.cols+ci]-L.zoff;
+}
+
+/* ---------- the draped surface: the photographs, as terrain ---------- */
+const surfaceGroup = new THREE.Group(); scene.add(surfaceGroup);
+let surfaceMesh = null, orthoTexture = null;
+const SURF = SCENE.surface;
+// The normal of the fitted site plane, needed early so object rings lie flat on the
+// slope rather than flat to the horizon.
+const surfaceNormalForMarkers = (SURF && SURF.frame && SURF.frame.n)
+  ? new THREE.Vector3().fromArray(SURF.frame.n).normalize()
+  : new THREE.Vector3(0,0,1);
+if(SURF && IMAGES[SURF.ortho]){
+  const pos = decode(SURF.vertices_float32_base64, Float32Array);
+  const uv  = decode(SURF.uv_float32_base64, Float32Array);
+  const sup = decode(SURF.support_float32_base64, Float32Array);
+  const idx = decode(SURF.indices_uint32_base64, Uint32Array);
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(pos,3));
+  g.setAttribute('uv', new THREE.BufferAttribute(uv,2));
+  g.setAttribute('support', new THREE.BufferAttribute(sup,1));
+  g.setIndex(new THREE.BufferAttribute(idx,1));
+  g.computeVertexNormals();
+
+  const img = new Image();
+  orthoTexture = new THREE.Texture(img);
+  orthoTexture.encoding = THREE.sRGBEncoding;
+  orthoTexture.generateMipmaps = true;
+  orthoTexture.minFilter = THREE.LinearMipmapLinearFilter;
+  orthoTexture.magFilter = THREE.LinearFilter;
+  orthoTexture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+  img.onload = function(){ orthoTexture.needsUpdate = true; surfaceMesh.visible = true; };
+  img.src = IMAGES[SURF.ortho];
+
+  // Basic, not Lambert. The photograph already contains the real illumination of the
+  // slope; re-lighting it shades every face twice and buries the shadow detail a
+  // searcher is looking into.
+  const mat = new THREE.MeshBasicMaterial({map: orthoTexture, side: THREE.DoubleSide});
+  // Ground interpolated across a gap is desaturated rather than hidden, so the picture
+  // stays continuous while stating which of it was actually measured.
+  const measured = SURF.measured_support_m, maxsup = SURF.max_support_m;
+  mat.onBeforeCompile = function(shader){
+    shader.uniforms.uMeasured = {value: measured};
+    shader.uniforms.uMaxSupport = {value: maxsup};
+    shader.vertexShader = 'attribute float support;\nvarying float vSupport;\n'
+      + shader.vertexShader.replace('#include <begin_vertex>',
+          '#include <begin_vertex>\n vSupport = support;');
+    shader.fragmentShader = 'uniform float uMeasured;\nuniform float uMaxSupport;\nvarying float vSupport;\n'
+      + shader.fragmentShader.replace('#include <dithering_fragment>',
+          '#include <dithering_fragment>\n'
+        + ' float t = smoothstep(uMeasured, uMaxSupport, vSupport);\n'
+        + ' float lum = dot(gl_FragColor.rgb, vec3(0.299,0.587,0.114));\n'
+        + ' gl_FragColor.rgb = mix(gl_FragColor.rgb, vec3(lum)*0.92, t*0.85);');
+  };
+  surfaceMesh = new THREE.Mesh(g, mat);
+  surfaceMesh.visible = false;
+  surfaceGroup.add(surfaceMesh);
+}
+
+/* ---------- photo quads: measured direction and range, not surface ---------- */
+const quadGroup = new THREE.Group(); scene.add(quadGroup);
+(SCENE.quads || []).forEach(function(q){
+  if(!IMAGES[q.image]) return;
+  const c = q.corners_m;
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(new Float32Array([
+    c[0][0],c[0][1],c[0][2], c[1][0],c[1][1],c[1][2], c[2][0],c[2][1],c[2][2],
+    c[0][0],c[0][1],c[0][2], c[2][0],c[2][1],c[2][2], c[3][0],c[3][1],c[3][2]]),3));
+  g.setAttribute('uv', new THREE.BufferAttribute(new Float32Array([0,1, 1,1, 1,0, 0,1, 1,0, 0,0]),2));
+  const im = new Image();
+  const tex = new THREE.Texture(im);
+  tex.encoding = THREE.sRGBEncoding;
+  tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+  im.onload = function(){ tex.needsUpdate = true; };
+  im.src = IMAGES[q.image];
+  const mesh = new THREE.Mesh(g, new THREE.MeshBasicMaterial({
+    map: tex, side: THREE.DoubleSide, depthWrite: true}));
+  mesh.userData.quad = q;
+  quadGroup.add(mesh);
+  // Border, so it reads as a photograph hanging in space rather than as ground.
+  const ring = new THREE.BufferGeometry();
+  ring.setAttribute('position', new THREE.BufferAttribute(new Float32Array([
+    c[0][0],c[0][1],c[0][2], c[1][0],c[1][1],c[1][2],
+    c[1][0],c[1][1],c[1][2], c[2][0],c[2][1],c[2][2],
+    c[2][0],c[2][1],c[2][2], c[3][0],c[3][1],c[3][2],
+    c[3][0],c[3][1],c[3][2], c[0][0],c[0][1],c[0][2]]),3));
+  quadGroup.add(new THREE.LineSegments(ring, new THREE.LineBasicMaterial({color:0xfbbf24})));
+  // Sight-line back to the camera, so the geometry can be checked by eye.
+  const sight = new THREE.BufferGeometry();
+  sight.setAttribute('position', new THREE.BufferAttribute(new Float32Array([
+    q.camera_m[0],q.camera_m[1],q.camera_m[2], q.centre_m[0],q.centre_m[1],q.centre_m[2]]),3));
+  quadGroup.add(new THREE.Line(sight, new THREE.LineBasicMaterial({
+    color:0xfbbf24, transparent:true, opacity:0.35})));
+});
+
+/* ---------- reconstruction cloud ---------- */
+const rc = SCENE.reconstruction.cloud;
+const cloudGeo = new THREE.BufferGeometry();
+cloudGeo.setAttribute('position', new THREE.BufferAttribute(decode(rc.xyz_float32_base64, Float32Array),3));
+const rgb = decode(rc.rgb_uint8_base64, Uint8Array);
+const cf = new Float32Array(rgb.length);
+for(let i=0;i<rgb.length;i++) cf[i]=rgb[i]/255;
+cloudGeo.setAttribute('color', new THREE.BufferAttribute(cf,3));
+const cloudMat = new THREE.PointsMaterial({size:3, sizeAttenuation:false, vertexColors:true});
+const cloud = new THREE.Points(cloudGeo, cloudMat); scene.add(cloud);
+
+/* ---------- fall line ---------- */
+const fl = SCENE.fall_line;
+const flp = decode(fl.xyz_float32_base64, Float32Array);
+function polyline(from, to, colour, width){
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(flp.slice(from*3, to*3),3));
+  return new THREE.Line(g, new THREE.LineBasicMaterial({color:colour, linewidth:width||1}));
+}
+if(fl.n>1){
+  scene.add(polyline(0, Math.min(fl.split_index+1, fl.n), 0x0e7490));
+  if(fl.split_index+1 < fl.n) scene.add(polyline(fl.split_index, fl.n, 0xdc2626));
+}
+
+/* ---------- objects ---------- */
+const OBJCOL = {'rucksack':0x2563eb,'pole':0x14b8a6,'lid':0x06b6d4,'orange object':0xf97316};
+const objGroup = new THREE.Group(); scene.add(objGroup);
+SCENE.objects.forEach(function(o){
+  const p = o.position_m;
+  const colour = OBJCOL[o.name] || 0xffffff;
+  // An open ring, not a filled blob. These objects are 4 to 100 cm across and sit
+  // inside metre-scale photographs; a solid marker hides the very evidence it points
+  // at, which was exactly what happened to the rucksack behind its own sphere.
+  const s = new THREE.Mesh(new THREE.SphereGeometry(0.10, 12, 8),
+    new THREE.MeshBasicMaterial({color:colour}));
+  s.position.set(p[0],p[1],p[2]); objGroup.add(s);
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(0.85, 0.05, 8, 40),
+    new THREE.MeshBasicMaterial({color:colour}));
+  ring.position.set(p[0],p[1],p[2]);
+  ring.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1), surfaceNormalForMarkers);
+  objGroup.add(ring);
+  const pin = new THREE.BufferGeometry();
+  pin.setAttribute('position', new THREE.BufferAttribute(
+    new Float32Array([p[0],p[1],p[2]+1.0, p[0],p[1],p[2]+9.0]),3));
+  objGroup.add(new THREE.Line(pin, new THREE.LineBasicMaterial({color:colour})));
+  // Drop-line to the DEM surface directly above or below. The DEM is wrong here
+  // by tens of metres; drawing the gap is the only honest way to show an object
+  // whose measured height disagrees with the terrain model it sits on.
+  const dh = demHeightAt(p[0],p[1]);
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(new Float32Array([p[0],p[1],p[2], p[0],p[1],dh]),3));
+  objGroup.add(new THREE.Line(g, new THREE.LineDashedMaterial({color:colour, dashSize:2, gapSize:2})));
+});
+objGroup.children.forEach(function(c){ if(c.computeLineDistances) c.computeLineDistances(); });
+
+/* ---------- cameras ---------- */
+const camGroup = new THREE.Group(); scene.add(camGroup);
+const nodes = SCENE.cameras.slice().sort(function(a,b){return a.frame-b.frame;});
+function basis(nd){
+  const r = new THREE.Vector3().fromArray(nd.right);
+  const u = new THREE.Vector3().fromArray(nd.up);
+  const f = new THREE.Vector3().fromArray(nd.forward);
+  return {r:r,u:u,f:f};
+}
+nodes.forEach(function(nd){
+  const b = basis(nd);
+  const p = new THREE.Vector3().fromArray(nd.position_m);
+  const d = nd.image ? 60 : 28;
+  const hw = Math.tan(nd.hfov_deg*Math.PI/360)*d, hh = Math.tan(nd.vfov_deg*Math.PI/360)*d;
+  const corner = function(sx,sy){
+    return p.clone().add(b.f.clone().multiplyScalar(d))
+      .add(b.r.clone().multiplyScalar(sx*hw)).add(b.u.clone().multiplyScalar(sy*hh));
+  };
+  const c = [corner(-1,1),corner(1,1),corner(1,-1),corner(-1,-1)];
+  const v=[];
+  c.forEach(function(x){ v.push(p.x,p.y,p.z, x.x,x.y,x.z); });
+  for(let i=0;i<4;i++){ const a=c[i],e=c[(i+1)%4]; v.push(a.x,a.y,a.z, e.x,e.y,e.z); }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(v),3));
+  const colour = nd.source==='sfm' ? 0x9ca3af : 0xf59e0b;
+  const line = new THREE.LineSegments(g, new THREE.LineBasicMaterial({
+    color:colour, transparent:true, opacity: nd.image?0.85:0.30}));
+  line.userData.node = nd;
+  camGroup.add(line);
+});
+
+/* ---------- framing ---------- */
+const cloudBox = new THREE.Box3().setFromObject(cloud);
+const cloudCentre = cloudBox.getCenter(new THREE.Vector3());
+function fallLineBox(){
+  const b = new THREE.Box3();
+  for(let i=0;i<fl.n;i++) b.expandByPoint(new THREE.Vector3(flp[i*3],flp[i*3+1],flp[i*3+2]));
+  return b;
+}
+function objectPoint(name){
+  const o = (SCENE.objects||[]).filter(function(x){return x.name===name;})[0];
+  return o ? new THREE.Vector3().fromArray(o.position_m) : cloudCentre.clone();
+}
+// The site is a face dipping 42 degrees. Looking at it from a conventional high
+// oblique foreshortens the drape into a sliver; looking down its own normal shows the
+// photograph square on, which is the whole point of having draped it.
+const surfaceNormal = surfaceNormalForMarkers;
+// Straight down the normal reads as a flat photograph. Tilting the standoff uphill by
+// 25 degrees keeps the drape nearly square on while letting the relief show, which is
+// the difference between a picture and a model.
+const uphill = new THREE.Vector3(0,0,1)
+  .addScaledVector(surfaceNormal, -surfaceNormal.z).normalize();
+const viewDir = surfaceNormal.clone().multiplyScalar(Math.cos(Math.PI*25/180))
+  .addScaledVector(uphill, Math.sin(Math.PI*25/180)).normalize();
+const surfaceBox = surfaceMesh
+  ? new THREE.Box3().setFromObject(surfaceMesh) : cloudBox.clone();
+const surfaceCentre = surfaceBox.getCenter(new THREE.Vector3());
+const surfaceSpan = surfaceBox.getSize(new THREE.Vector3()).length();
+const VIEWS = {
+  site:  function(){ return {t:surfaceCentre.clone(), d:surfaceSpan*0.62,
+                             dir:viewDir.clone()}; },
+  rucksack: function(){
+    // Stand where the still stood. The quad faces that camera and nowhere else, so any
+    // other viewpoint shows it edge-on as a sliver.
+    const q = (SCENE.quads||[]).filter(function(x){return x.name==='rucksack';})[0];
+    if(!q) return {t:objectPoint('rucksack'), d:70, dir:viewDir.clone()};
+    const c = new THREE.Vector3().fromArray(q.centre_m);
+    const dir = new THREE.Vector3().fromArray(q.camera_m).sub(c).normalize();
+    return {t:c, d:Math.max(q.width_m, q.height_m)*2.2, dir:dir};
+  },
+  fall:  function(){ const b=fallLineBox().union(cloudBox);
+                     return {t:b.getCenter(new THREE.Vector3()),
+                             d:Math.max(b.getSize(new THREE.Vector3()).length()*0.85, 600)}; },
+  wide:  function(){ const b=new THREE.Box3().setFromObject(terrainGroup);
+                     return {t:b.getCenter(new THREE.Vector3()),
+                             d:b.getSize(new THREE.Vector3()).length()*0.75}; }
+};
+let currentView = 'site';
+function freeOrbit(which){
+  currentView = which || currentView;
+  active=null; photo.style.display='none';
+  cam.matrixAutoUpdate = true;
+  cam.fov = 45; cam.near=1; cam.far=60000;
+  controls.enabled = true;
+  surfaceGroup.visible = document.getElementById('showsurf').checked;
+  camGroup.visible = document.getElementById('showfr').checked;
+  const v = VIEWS[currentView]();
+  controls.target.copy(v.t);
+  // Stand off along the requested direction, defaulting to a south-east oblique, then
+  // lift clear of the terrain so the opening view is never from inside the mountain.
+  const offset = v.dir ? v.dir.clone().multiplyScalar(v.d)
+                       : new THREE.Vector3(v.d*0.62, -v.d*0.78, v.d*0.55);
+  const pos = v.t.clone().add(offset);
+  pos.z = Math.max(pos.z, demHeightAt(pos.x,pos.y)+10);
+  cam.position.copy(pos);
+  cam.up.copy(UP);
+  zoomK = 1; layout();
+  document.querySelectorAll('.cam.on').forEach(function(e){e.classList.remove('on');});
+  document.querySelectorAll('.viewbtn').forEach(function(e){
+    e.classList.toggle('on', e.dataset.view===currentView); });
+  document.getElementById('sub').textContent =
+    'Drag to orbit, scroll to zoom. Pick a camera to see what it saw.';
+}
+
+/* ---------- camera-station mode ---------- */
+const photo = document.getElementById('photo');
+let active = null, zoomK = 1;
+function enter(nd, btn){
+  if(!nd.image || !IMAGES[nd.image]) return;
+  active = nd; zoomK = 1;
+  controls.enabled = false;
+  cam.matrixAutoUpdate = false;
+  const b = basis(nd);
+  const m = new THREE.Matrix4().makeBasis(b.r, b.u, b.f.clone().negate());
+  m.setPosition(new THREE.Vector3().fromArray(nd.position_m));
+  cam.matrix.copy(m);
+  cam.matrix.decompose(cam.position, cam.quaternion, cam.scale);
+  cam.fov = nd.vfov_deg; cam.near = 0.5; cam.far = 40000;
+  // Every other frustum projects as a web of lines across the photograph, which
+  // buries it. Hide them here; the checkbox brings them back if wanted.
+  camGroup.visible = false;
+  document.getElementById('showfr').checked = false;
+  photo.src = IMAGES[nd.image]; photo.style.display='block';
+  document.querySelectorAll('.cam.on').forEach(function(e){e.classList.remove('on');});
+  if(btn) btn.classList.add('on');
+  document.getElementById('sub').innerHTML =
+    'Camera view, frame '+nd.frame+' at t='+nd.t_s+' s. Scroll to zoom into the photograph. '+
+    'The <kbd>photo</kbd> slider fades to the model behind it.';
+  layout();
+}
+document.querySelectorAll('.viewbtn').forEach(function(b){
+  b.onclick = function(){ freeOrbit(b.dataset.view); };
+});
+document.getElementById('fade').oninput = function(){ photo.style.opacity = this.value/100; };
+document.getElementById('showdem').onchange = function(){ terrainGroup.visible = this.checked; };
+document.getElementById('showfr').onchange = function(){ camGroup.visible = this.checked; };
+document.getElementById('showsurf').onchange = function(){ surfaceGroup.visible = this.checked; };
+document.getElementById('showcloud').onchange = function(){ cloud.visible = this.checked; };
+// The point cloud built the surface; it is not the deliverable, and neither are the
+// cameras. Both start hidden so the first thing on screen is the photograph.
+cloud.visible = false;
+camGroup.visible = false;
+
+/* Zoom in camera mode scales the canvas and the photograph together, so they
+   stay registered pixel for pixel and the photo reaches native resolution. */
+document.getElementById('stage').addEventListener('wheel', function(ev){
+  if(!active) return;
+  ev.preventDefault();
+  zoomK = Math.max(1, Math.min(12, zoomK * (ev.deltaY<0 ? 1.18 : 1/1.18)));
+  layout();
+}, {passive:false});
+
+function layout(){
+  const W = innerWidth, H = innerHeight;
+  let w=W, h=H;
+  if(active){
+    const ar = active.width/active.height;
+    if(W/H > ar){ h=H; w=H*ar; } else { w=W; h=W/ar; }
+  }
+  renderer.setSize(w,h,false);
+  cam.aspect = w/h;
+  if(!active){ cam.updateProjectionMatrix(); }
+  else{
+    cam.fov = active.vfov_deg;
+    cam.updateProjectionMatrix();
+    photo.style.width = w+'px'; photo.style.height = h+'px';
+  }
+  viewport.style.width = w+'px'; viewport.style.height = h+'px';
+  const k = active ? zoomK : 1;
+  const left = (W - w*k)/2, top = (H - h*k)/2;
+  viewport.style.transform = 'translate('+left+'px,'+top+'px) scale('+k+')';
+}
+addEventListener('resize', layout);
+
+/* ---------- panels ---------- */
+const objsEl = document.getElementById('objs');
+SCENE.objects.forEach(function(o){
+  const d = document.createElement('div');
+  d.style.margin='5px 0';
+  const gap = o.dem_minus_object_m;
+  d.innerHTML = '<div style="display:flex;gap:7px;align-items:center">'+
+    '<span class="sw" style="background:#'+(OBJCOL[o.name]||0xffffff).toString(16).padStart(6,'0')+'"></span>'+
+    '<b>'+o.name+'</b><span class="tag">'+o.source+'</span></div>'+
+    '<div style="color:var(--muted);font-size:11px;margin-left:18px">'+
+    fmt(o.lat,6)+' N, '+fmt(o.lon,6)+' E, '+fmt(o.elev_ellipsoidal_m)+' m<br>'+
+    'DEM here is '+(gap>0?'+':'')+fmt(gap)+' m off</div>';
+  objsEl.appendChild(d);
+});
+
+function addCam(container, nd){
+  const b = document.createElement('button');
+  b.className='cam';
+  b.innerHTML = 'frame '+nd.frame+' <small>t='+nd.t_s+'s &middot; '+
+    (nd.f_px>20000?'digital zoom':'f='+Math.round(nd.f_px)+'px')+'</small>'+
+    (nd.source==='telemetry'?'<span class="tag">telemetry pose</span>':'');
+  if(nd.image && IMAGES[nd.image]) b.onclick=function(){ enter(nd,b); };
+  else { b.style.opacity=0.55; b.onclick=function(){
+      controls.enabled=true; cam.matrixAutoUpdate=true; active=null; photo.style.display='none';
+      controls.target.set(nd.position_m[0],nd.position_m[1],nd.position_m[2]);
+      layout(); }; }
+  container.appendChild(b);
+}
+const withImg = nodes.filter(function(n){return n.image && IMAGES[n.image];});
+const without = nodes.filter(function(n){return !(n.image && IMAGES[n.image]);});
+withImg.forEach(function(n){ addCam(document.getElementById('cams'), n); });
+without.forEach(function(n){ addCam(document.getElementById('cams2'), n); });
+
+const R = SCENE.reconstruction;
+let stats = '';
+if(SURF){
+  stats += '<tr><td>photo surface</td><td class="n">'+Math.round(SURF.area_m2).toLocaleString()+' m&sup2;</td></tr>'+
+    '<tr><td>posting</td><td class="n">'+SURF.posting_m+' m</td></tr>'+
+    '<tr><td>ground per texel</td><td class="n">'+(SURF.rect.metres_per_texel*100).toFixed(1)+' cm</td></tr>'+
+    '<tr><td>measured within '+SURF.measured_support_m+' m</td><td class="n">'+
+      Math.round(SURF.measured_fraction*100)+'%</td></tr>';
+}
+stats += '<tr><td>from</td><td class="n">'+R.registered_images+' frames, '+
+  R.mean_reprojection_error_px+' px</td></tr>'+
+  '<tr><td>camera fit</td><td class="n">'+R.camera_residual_median_m+' m median</td></tr>'+
+  SCENE.verification.held_out_laser_check.filter(function(c){return c.surface_error_m!==null;})
+    .map(function(c){ return '<tr><td>'+c.object+' (held out)</td><td class="n">'+
+      (c.surface_error_m>0?'+':'')+c.surface_error_m+' m</td></tr>'; }).join('');
+document.getElementById('stats').innerHTML = stats;
+
+document.getElementById('legend').innerHTML =
+  '<div><b>The surface is the photographs.</b></div>'+
+  '<div style="color:var(--muted);margin-bottom:5px">'+
+    (SURF ? SURF.ortho_frames.length+' frames baked on at '+
+      (SURF.rect.metres_per_texel*100).toFixed(1)+' cm per texel' : '')+'</div>'+
+  '<div><span class="sw" style="background:#fbbf24"></span>photograph at a laser-measured range</div>'+
+  '<div><span class="sw" style="background:#0e7490"></span>fall line, searched</div>'+
+  '<div><span class="sw" style="background:#dc2626"></span>fall line, never searched below the lid</div>'+
+  '<div style="margin-top:6px;color:var(--muted)">grey, washed-out ground is interpolated '+
+    'across a gap, not measured. Dashed lines show how far the 30 m DEM is out.</div>';
+
+/* ---------- loop ---------- */
+const readout = document.getElementById('read');
+function tick(){
+  requestAnimationFrame(tick);
+  if(!active){ controls.update(); }
+  else { cam.updateMatrixWorld(true); }
+  renderer.render(scene, cam);
+  readout.innerHTML = active
+    ? ('frame '+active.frame+' &middot; zoom '+zoomK.toFixed(1)+'x &middot; '+
+       active.width+'x'+active.height)
+    : ('origin '+SCENE.frame.origin_lat.toFixed(6)+' N, '+SCENE.frame.origin_lon.toFixed(6)+
+       ' E &middot; heights WGS84 ellipsoidal');
+}
+/* A deep link like #frame=2265 opens straight into that camera, so a specific
+   sighting can be sent to someone as a URL rather than as instructions. */
+function applyHash(){
+  const view = /view=(\w+)/.exec(location.hash||'');
+  if(view && VIEWS[view[1]]){ freeOrbit(view[1]); return true; }
+  const m = /frame=(\d+)/.exec(location.hash||'');
+  if(!m) return false;
+  const want = parseInt(m[1],10);
+  const nd = withImg.filter(function(n){return n.frame===want;})[0];
+  if(!nd) return false;
+  const btns = document.querySelectorAll('#cams .cam');
+  enter(nd, btns[withImg.indexOf(nd)]);
+  const f = /fade=(\d+)/.exec(location.hash||'');
+  if(f){
+    const slider = document.getElementById('fade');
+    slider.value = f[1]; photo.style.opacity = f[1]/100;
+  }
+  return true;
+}
+addEventListener('hashchange', function(){ if(!applyHash()) freeOrbit(); });
+
+freeOrbit('site'); layout();
+if(!applyHash()) freeOrbit('site');
+tick();
+})();
+</script>
+</body>
+</html>
