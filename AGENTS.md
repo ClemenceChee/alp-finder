@@ -23,13 +23,20 @@ docs/                   — вся накопленная информация; 
     svodka.md           — сводка находок и статусов по группе, обновлять при разборе
   nakhodki/             — реестр находок с координатами, кадрами (frames/), картой и KML для штаба
   video-analysis.md     — конвейер анализа видео и статус пилота
+  geoindeks.md          - геопривязка: пиксель в координату, координата в кадры, покрытие; проверка на эталонах
 analysis/               — код и артефакты анализа видео (venv, детектор, кропы); план — docs/video-analysis.md
+  georef.py             - рельеф, телеметрия, трассировка луча, оценка погрешности
+  selfcal.py            - фокусное расстояние из самой съёмки (в метаданных его нет)
+  geoindex.py           - CLI геоиндекса: tochka / kadry / pokrytie
+  test_geoindex.py      - тесты на синтетической геометрии, видео и DEM не нужны
+data/dem/               - модель высот Copernicus GLO-30 (scripts/download_dem.sh), в репо не хранится
 data/drive/             — локальное зеркало Drive: <дата>/<слаг-папки>/<файл>
 data/telegram/          — медиа из TG-группы: <слаг-темы>/<msg_id>_<файл>
 logs/                   — tg-updates.log (что и когда докачано из TG), tg-watch.log (служебный)
 scripts/
   manifest.tsv          — манифест скачивания: локальный путь, drive file id, размер
   download_drive.sh     — идемпотентная докачка по манифесту
+  download_dem.sh       - модель высот Copernicus GLO-30 для геопривязки (37 МБ, без регистрации)
   drive_cron.sh         — ежечасный повтор докачки Drive (квоты Google); стоит в crontab
   tg_export.py          — выгрузка TG-группы (Telethon; сессия .tg_session — секрет, не публиковать)
   tg_cron.sh            — итерация докачки TG; стоит в crontab раз в минуту

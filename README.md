@@ -61,6 +61,25 @@ python3 scripts/gps_tsv_to_srt.py data/drive/<путь к видео>.MP4
 # из tsv соберёт стандартный DJI-SRT — открывается в VLC вместе с видео
 ```
 
+### 4. Геоиндекс: координата кандидата и карта покрытия
+
+```bash
+bash scripts/download_dem.sh    # модель высот Copernicus GLO-30, 37 МБ, без регистрации
+python3 -m pip install numpy opencv-python rasterio
+
+# пиксель кадра -> широта, долгота, высота, погрешность
+python3 analysis/geoindex.py tochka data/drive/<видео>.MP4 --time 3:32 --pixel 41,282
+# координата -> все кадры, которые её видели
+python3 analysis/geoindex.py kadry --coord 39.482656,73.586792 data/drive/<...>/*.MP4
+# что осмотрено, что нет, и дыры на линии падения
+python3 analysis/geoindex.py pokrytie data/drive/<...>/*.MP4 --fall-line 39.482656,73.586792
+```
+
+Нужен сайдкар телеметрии с углами подвеса (шаг 3, версия `dji_meta_gps.py` с
+`gb_yaw`/`gb_pitch`). Где фокусное восстановить не удалось или геометрия слишком
+косая, инструмент выдаёт только азимут вместо координаты. Подробности,
+ограничения и проверка на эталонах - `docs/geoindeks.md`.
+
 ## Правила работы
 
 - Сначала инвентаризация и документирование, потом обработка.
