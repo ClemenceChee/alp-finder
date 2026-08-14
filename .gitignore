@@ -28,6 +28,9 @@ analysis/fullframe/
 # Прогоны стенда врезок (регенерируются analysis/inject_probe.py; цифры - в docs/video-analysis.md)
 analysis/floor-*/
 
+# Мозаики склейки пролётов (регенерируются analysis/stitch.py)
+analysis/stitch/
+
 # Сборка публичного просмотрщика (регенерируется analysis/viewer/build_dist.py)
 analysis/viewer/dist/
 # Кэш wrangler (деплой Cloudflare Pages)
