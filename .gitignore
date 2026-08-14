@@ -18,6 +18,9 @@ __pycache__/
 analysis/pilot/gt-results/crops/
 analysis/pilot/scan-*/
 
+# Прогоны стенда врезок (регенерируются analysis/inject_probe.py; цифры - в docs/video-analysis.md)
+analysis/floor-*/
+
 *.log
 
 .DS_Store
