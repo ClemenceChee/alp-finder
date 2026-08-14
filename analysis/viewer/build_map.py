@@ -893,13 +893,29 @@ const D = __DATA__;
 
 const map = L.map('map', {zoomControl:true});
 map.fitBounds([[39.468,73.578],[39.503,73.606]]);
-const sat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-  {maxZoom:19, attribution:'Esri World Imagery'});
-const topo = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
-  {maxZoom:17, attribution:'OpenTopoMap'});
+const SAT_URL = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+const TOPO_URL = 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png';
+// maxNativeZoom: у OpenTopoMap тайлов глубже 17-го зума нет — растягиваем,
+// чтобы при зуме 18–19 (есть у Esri) топослой не пропадал
+const sat = L.tileLayer(SAT_URL, {maxZoom:19, attribution:'Esri World Imagery'});
+const topo = L.tileLayer(TOPO_URL, {maxZoom:19, maxNativeZoom:17, attribution:'OpenTopoMap'});
 sat.addTo(map);
 L.control.layers({'Спутник (Esri)':sat,'Топокарта':topo}, null, {position:'topright'}).addTo(map);
 L.control.scale({imperial:false}).addTo(map);
+
+// --- наложение второй карты (спутник и топокарта одновременно) ---
+// Поверх текущей основы кладётся вторая карта с прозрачностью по ползунку:
+// основа спутник → сверху топокарта, основа топокарта → сверху спутник.
+const satOv = L.tileLayer(SAT_URL, {maxZoom:19, zIndex:2});
+const topoOv = L.tileLayer(TOPO_URL, {maxZoom:19, maxNativeZoom:17, zIndex:2});
+let baseIsSat = true, ovOpacity = 0;
+function syncOverlay() {
+  const ov = baseIsSat ? topoOv : satOv;
+  map.removeLayer(baseIsSat ? satOv : topoOv);
+  if (ovOpacity > 0) { ov.setOpacity(ovOpacity); if (!map.hasLayer(ov)) ov.addTo(map); }
+  else map.removeLayer(ov);
+}
+map.on('baselayerchange', e => { baseIsSat = (e.layer === sat); syncOverlay(); });
 
 const CONF_COLOR = {5:'#2e7d32',4:'#e65100',3:'#c9a20b',2:'#607d8b',v:'#1e88e5',x:'#8e6bb0'};
 const confCls = c => c==null ? 'cq' : 'c'+c;
@@ -1105,6 +1121,22 @@ for (const [title, layer, on] of overlays) {
     e.target.checked ? layer.addTo(map) : map.removeLayer(layer);
   layersDiv.appendChild(el);
 }
+
+const ovBox = document.createElement('div');
+ovBox.innerHTML = `<label class="lyr" style="gap:6px">Вторая карта поверх:
+  <input type="range" min="0" max="100" value="0" style="flex:1; min-width:0">
+  <span class="cnt" style="min-width:34px; color:var(--dim); font-size:11px">выкл</span></label>
+  <p class="note" style="margin-top:0">Кладёт вторую карту полупрозрачным слоем поверх основной
+  (основа — спутник → сверху топокарта, и наоборот; основа переключается в правом верхнем
+  углу карты). 100 — видна только вторая карта.</p>`;
+const ovSlider = ovBox.querySelector('input');
+const ovPct = ovBox.querySelector('span');
+ovSlider.oninput = () => {
+  ovOpacity = ovSlider.value / 100;
+  ovPct.textContent = ovSlider.value === '0' ? 'выкл' : ovSlider.value + '%';
+  syncOverlay();
+};
+layersDiv.appendChild(ovBox);
 
 // --- панель фильтров ---
 const filtersDiv = document.getElementById('filters');
